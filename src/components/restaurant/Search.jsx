@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-
-import Bubble from "Bubble";
+import React, { useState, useEffect } from "react";
 
 import { useRealm, useDebouncedEffect } from "services/realm";
 
 const ALL_CUISINES = "All Cuisines";
 
 export default function RestaurantsSearch({
-  query: { page, skip, size, limit, ...queryProp },
+  query: { page, skip, size, limit, ...queryProps },
+  refFocus,
 }) {
   // note: search parameters in props are used as initial condition; updates to this form do not directly
   //  update the location (where the props come from):  user must do page navigation to change props
-  const [query, setQuery] = useState(queryProp),
-    [{ cuisines = [] }, api] = useRealm(),
-    focusRef = useRef();
+  const [{ cuisines = [] }, api] = useRealm(),
+    [query, setQuery] = useState(queryProps);
 
   page = (() => {
     const pagination = {};
@@ -65,18 +63,14 @@ export default function RestaurantsSearch({
   );
 
   return (
-    <Bubble
-      affordance={<button> Search </button>}
-      focusRef={focusRef}
-      className="search"
-    >
+    <div className="restaurants-search">
       <input
         type="text"
         name="text"
-        value={query.name}
+        value={query.text}
         onChange={updateQuery}
         placeholder="Text search (name or street)"
-        ref={focusRef}
+        ref={refFocus}
       />
       <input
         type="text"
@@ -94,6 +88,6 @@ export default function RestaurantsSearch({
           </option>
         ))}
       </select>
-    </Bubble>
+    </div>
   );
 }

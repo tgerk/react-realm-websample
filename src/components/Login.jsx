@@ -1,10 +1,10 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext } from "react";
 
 import Bubble from "Bubble";
 
 import { UserContext } from "services/user";
 
-export function Login({ focusRef }) {
+export function Login({ refFocus }) {
   const [currentUser, setCurrentUser] = useContext(UserContext),
     [user, setUser] = useState(currentUser || {}),
     { userName, userId } = user;
@@ -28,7 +28,7 @@ export function Login({ focusRef }) {
           type="text"
           value={userName}
           onChange={updateUser}
-          ref={focusRef}
+          ref={refFocus}
           required
         />
       </div>
@@ -70,16 +70,15 @@ export function Logout() {
 }
 
 export default function UserLogin() {
-  const [currentUser] = useContext(UserContext),
-    focusRef = useRef();
+  const [currentUser] = useContext(UserContext);
 
   if (currentUser) {
     return <Logout />;
   }
 
   return (
-    <Bubble affordance={<button>Login</button>} focusRef={focusRef}>
-      <Login focusRef={focusRef} />
+    <Bubble affordance={<button>Login</button>}>
+      <Login />
     </Bubble>
   );
 }

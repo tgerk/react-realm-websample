@@ -35,7 +35,7 @@ export default function Review({
   }
 
   return (
-    <form className="review" onSubmit={saveReview}>
+    <form className="restaurant-review" onSubmit={saveReview}>
       <div>
         <label htmlFor="description">
           {reviewId ? "Update" : "Create"} Review

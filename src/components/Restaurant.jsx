@@ -61,11 +61,8 @@ export default function Restaurant({ id }) {
           <p className="loading">Be the first to review!</p>
         )}
       </section>
-      <aside>
-        <Link to={`/restaurant/${id}/review`} className="btn btn-primary">
-          {" "}
-          Add Review{" "}
-        </Link>
+      <aside className="aside-actions">
+        <Link to={`/restaurant/${id}/review`}> Add Review </Link>
       </aside>
     </article>
   );

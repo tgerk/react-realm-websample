@@ -1,5 +1,6 @@
 import React from "react";
 
+import Bubble from "Bubble";
 import Gallery from "Gallery";
 import Search from "restaurant/Search";
 import RestaurantCard from "restaurant/Card";
@@ -12,7 +13,7 @@ export default function RestaurantList({ location: { search } }) {
     {
       restaurants: {
         query,
-        restaurants = [],
+        restaurants,
         count: total,
         nav: links,
         ...data
@@ -22,19 +23,22 @@ export default function RestaurantList({ location: { search } }) {
 
   return (
     <div className="restaurants-list">
-      <Search
-        query={{
-          ...query,
-          ...Object.fromEntries(new URLSearchParams(search).entries()),
-        }}
-      />
+      <Bubble affordance={<button> Search </button>}>
+        <Search
+          query={
+            query || Object.fromEntries(new URLSearchParams(search).entries())
+          }
+        />
+      </Bubble>
 
-      {restaurants.length ? (
+      {restaurants?.length ? (
         <Gallery {...{ total, ...links, ...data }}>
           {restaurants.map((restaurant, i) => (
             <RestaurantCard {...restaurant} key={i} />
           ))}
         </Gallery>
+      ) : restaurants ? (
+        <p className="loading">Sorry, no restaurants</p>
       ) : (
         <p className="loading">Loading...</p>
       )}

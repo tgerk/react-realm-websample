@@ -1,13 +1,10 @@
-const { override, addBabelPlugin } = require('customize-cra')
+const { override, addBabelPlugin } = require("customize-cra");
 
 module.exports = override(
   addBabelPlugin([
     "module-resolver",
     {
-      "root": [
-        "./src/components",
-        "./src"
-      ]
-    }
+      root: ["./src/components", "./src"],
+    },
   ])
-)
+);
