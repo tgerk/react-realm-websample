@@ -1,0 +1,17 @@
+{
+    "properties": {
+        "_id": {
+            "bsonType": "objectId"
+        },
+        "date": {
+            "bsonType": "date"
+        },
+        "restaurant_id": {
+            "bsonType": "objectId"
+        },
+        "text": {
+            "bsonType": "string"
+        }
+    },
+    "title": "review"
+}

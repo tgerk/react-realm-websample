@@ -1,0 +1,7 @@
+{
+    "enabled": false,
+    "mongo_service_name": "mongodb-atlas",
+    "database_name": "sample_restaurants",
+    "collection_name": "managers",
+    "user_id_field": "user_id"
+}
