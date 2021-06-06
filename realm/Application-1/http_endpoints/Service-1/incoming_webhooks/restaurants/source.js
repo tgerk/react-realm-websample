@@ -54,11 +54,8 @@ exports = async function (payload, response) {
       .get("mongodb-atlas")
       .db("sample_restaurants")
       .collection("restaurants"),
-    search = pipeline(filter, skip, limit),
-    {
-      count: [{ count }],
-      page,
-    } = await restaurants.aggregate(search).next(),
+    { count: [{ count = 0 }] = [{}], page = [] } =
+      (await restaurants.aggregate(pipeline(filter, skip, limit)).next()) || {},
     result = {
       count,
       restaurants: page.map(outputTransformRestaurant),
