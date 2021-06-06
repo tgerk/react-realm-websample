@@ -1,0 +1,82 @@
+{
+    "collection": "restaurants",
+    "database": "sample_restaurants",
+    "filters": [
+        {
+            "name": "paging",
+            "query": {
+                "limit": "LIMIT(20)"
+            },
+            "apply_when": {}
+        }
+    ],
+    "roles": [
+        {
+            "name": "default",
+            "apply_when": {},
+            "read": true,
+            "write": false,
+            "insert": false,
+            "delete": false,
+            "search": true,
+            "additional_fields": {}
+        }
+    ],
+    "schema": {
+        "properties": {
+            "_id": {
+                "bsonType": "objectId"
+            },
+            "address": {
+                "bsonType": "object",
+                "properties": {
+                    "building": {
+                        "bsonType": "string"
+                    },
+                    "coord": {
+                        "bsonType": "array",
+                        "items": {
+                            "bsonType": "double"
+                        }
+                    },
+                    "street": {
+                        "bsonType": "string"
+                    },
+                    "zipcode": {
+                        "bsonType": "string"
+                    }
+                }
+            },
+            "borough": {
+                "bsonType": "string"
+            },
+            "cuisine": {
+                "bsonType": "string"
+            },
+            "grades": {
+                "bsonType": "array",
+                "items": {
+                    "bsonType": "object",
+                    "properties": {
+                        "date": {
+                            "bsonType": "date"
+                        },
+                        "grade": {
+                            "bsonType": "string"
+                        },
+                        "score": {
+                            "bsonType": "int"
+                        }
+                    }
+                }
+            },
+            "name": {
+                "bsonType": "string"
+            },
+            "restaurant_id": {
+                "bsonType": "string"
+            }
+        },
+        "title": "restaurant"
+    }
+}

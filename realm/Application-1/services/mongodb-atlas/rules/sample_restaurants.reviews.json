@@ -1,0 +1,61 @@
+{
+    "collection": "reviews",
+    "database": "sample_restaurants",
+    "relationships": {
+        "restaurant_id": {
+            "ref": "#/relationship/mongodb-atlas/sample_restaurants/restaurants",
+            "source_key": "restaurant_id",
+            "foreign_key": "_id",
+            "is_list": false
+        }
+    },
+    "roles": [
+        {
+            "name": "owner",
+            "apply_when": {
+                "user_id": "%%user.id"
+            },
+            "read": true,
+            "write": true,
+            "insert": true,
+            "delete": true,
+            "search": true,
+            "additional_fields": {}
+        },
+        {
+            "name": "non-owner",
+            "apply_when": {},
+            "read": true,
+            "write": false,
+            "insert": false,
+            "delete": false,
+            "search": true,
+            "additional_fields": {}
+        },
+        {
+            "name": "manager",
+            "apply_when": {},
+            "insert": false,
+            "delete": true,
+            "search": true,
+            "additional_fields": {}
+        }
+    ],
+    "schema": {
+        "properties": {
+            "_id": {
+                "bsonType": "objectId"
+            },
+            "date": {
+                "bsonType": "date"
+            },
+            "restaurant_id": {
+                "bsonType": "objectId"
+            },
+            "text": {
+                "bsonType": "string"
+            }
+        },
+        "title": "review"
+    }
+}
