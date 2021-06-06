@@ -28,7 +28,10 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "pull": "realm-cli pull --include-hosting --remote application-1-sdtbu --local realm/Application-1",
+    "push": "realm-cli push --include-hosting --remote application-1-sdtbu --local realm/Application-1",
+    "deploy": "npm run build; npm run push"
   },
   "eslintConfig": {
     "extends": [
