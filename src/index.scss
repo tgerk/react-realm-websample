@@ -41,26 +41,53 @@ main {
 }
 
 .gallery {
-  // row
+  display: flex;
+  flex-wrap: wrap;
 
   &-nav {
-    // fix this as a bar at the top of the gallery
+    background-color: bisque;
+    padding: 2em 10%;
+    display: flex;
+    flex: 0 100%;
+
     .page::before {
-      content: "Page";
+      content: "page ";
+    }
+
+    .total::before {
+      content: " of ";
     }
 
     .total::after {
-      content: "total";
+      content: " total results";
     }
 
-    .prevPage,
-    .nextPage {
-      // set content icons and size
+    > span {
+      margin: auto;
     }
+
+    > a {
+      padding: 1em;
+      margin: 4px;
+      border-radius: 1em;
+      background-color: pink;
+      color: red;
+      text-decoration: none;
+    }
+
+    .firstPage { order: -2; }
+    .prevPage { order: -1; }
+    .nextPage { order: 1; }
+    .lastPage { order: 2; }
   }
 
+  gap: 8px;
+
   > .card {
-    // col-lg-2 col-md-4 col-sm-6 pb-1
+    padding: 6px;
+    border-radius: 10px 0 0 0;
+    background-color: bisque;
+    flex: 1 0 20%
   }
 }
 
@@ -112,8 +139,11 @@ article.card {
   }
 }
 
+form.login {
+  text-align: right;
+}
+
 form.login,
-form.logout,
 form.review {
   // submit-form
 
@@ -130,18 +160,33 @@ form.review {
   }
 }
 
-div.dropdown {
+.bubble-root {
   position: relative;
+  // need to maintain size of the affordance while the bubble is up and overlaying
+  // (or, tastefully transition)
 
-  > div.dropdown {
+  > .bubble-content {
     position: absolute;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    opacity: 75%;
+    border-radius: 2em;
+    margin: 2em;
+    padding: 1em;
+    box-shadow: 0 0 3em brown;
+    background-color: brown;
+    visibility: hidden;
   }
 }
 
-.loading {
+.user-info {
   padding-top: 4em;
   font-style: italic;
   font-size: larger;
   opacity: 80%;
-  // animate?!
+}
+
+.pulse {
+
 }

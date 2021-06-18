@@ -1,28 +1,43 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Gallery({
   page,
   total,
+  first,
   prev,
   next,
+  last,
   children,
   ...props
 }) {
   return (
     <div className="gallery" {...props}>
-      {(page || total || prev || next) && (
+      {(page || total || first || prev || next || last) && (
         <div className="gallery-nav">
-          {page && <span className="page">{page}</span>}
-          {total && <span className="total">{total}</span>}
+          <span>
+            {page && <span className="page">{page}</span>}
+            {total && <span className="total">{total}</span>}
+          </span>
+          {first && (
+            <Link className="firstPage" to={first}>
+              &#x21e4;
+            </Link>
+          )}
+          {last && (
+            <Link className="lastPage" to={last}>
+              &#x21e5;
+            </Link>
+          )}
           {prev && (
-            <a className="prevPage" href={prev}>
-              &lt;
-            </a>
+            <Link className="prevPage" to={prev}>
+              &larr;
+            </Link>
           )}
           {next && (
-            <a className="nextPage" href={next}>
-              &gt;
-            </a>
+            <Link className="nextPage" to={next}>
+              &rarr;
+            </Link>
           )}
         </div>
       )}

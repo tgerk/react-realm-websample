@@ -13,9 +13,7 @@ export default function ReviewCard({ restaurantId, ...review }) {
     [, api] = useRealm();
 
   function removeReview() {
-    api.deleteReview(reviewId, userId, restaurantId).catch((e) => {
-      console.log(e);
-    });
+    api.deleteReview(reviewId, userId, restaurantId);
   }
 
   const actions = [];

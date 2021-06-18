@@ -10,7 +10,7 @@ export default function Bubble({ affordance, children, ...props }) {
   //  the onBlur handler should not cause a re-render
   function showBubble() {
     if (refAffordance.current) {
-      refAffordance.current.style.visibility = "hidden";
+      refAffordance.current.toggleAttribute("disabled");
     }
     if (refBubble.current) {
       refBubble.current.style.visibility = "visible";
@@ -19,11 +19,9 @@ export default function Bubble({ affordance, children, ...props }) {
   }
 
   function hideBubble({ currentTarget: us, relatedTarget: them }) {
-    console.log({ us, them });
     if (!them || !us.contains(them)) {
-      console.log({ refAffordance, refBubble });
       if (refAffordance.current) {
-        refAffordance.current.style.visibility = "visible";
+        refAffordance.current.toggleAttribute("disabled");
       }
       if (refBubble.current) {
         refBubble.current.style.visibility = "hidden";

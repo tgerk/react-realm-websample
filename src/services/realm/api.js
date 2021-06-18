@@ -137,6 +137,8 @@ class RealmAPI {
     // I could dispatch an action with a conditional callback, but then I wouldn't
     //  be able to return the [cancelable] Promise...sad :(
 
+    //TODO: caching
+
     const source = axios.CancelToken.source(),
       q = this.httpRealm
         .then((http) =>

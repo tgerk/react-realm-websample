@@ -24,17 +24,11 @@ export default function Restaurant({ id }) {
 
   useEffect(() => {
     // I think this is called each time we navigate to the page (because newly-mounted on each navigation by Router/Switch --need confirmation)
-    /* console.info(
-      `requesting restaurant ${id}` +
-        (restaurantId ? `, updating "${name}" already in Realm context` : "")
-    ); */
-    api.getRestaurant(id).catch((e) => {
-      console.log(e);
-    });
+    api.getRestaurant(id);
   }, [id, api]);
 
   if (restaurantId !== id) {
-    return <p className="loading">Loading...</p>;
+    return <p className="user-info pulse">Loading...</p>;
   }
 
   return (
@@ -58,7 +52,7 @@ export default function Restaurant({ id }) {
             ))}
           </Gallery>
         ) : (
-          <p className="loading">Be the first to review!</p>
+          <p className="user-info">Be the first to review!</p>
         )}
       </section>
       <aside className="aside-actions">

@@ -21,8 +21,6 @@ export default function Review({
       userId: currentUser.id,
       name: currentUser.name,
       text: reviewText,
-    }).catch((e) => {
-      console.log(e);
     });
 
     history.push(`/restaurant/${restaurantId}`);
@@ -30,7 +28,9 @@ export default function Review({
 
   if (!currentUser) {
     return (
-      <p className="loading">Sorry! Only logged-in users can leave reviews.</p>
+      <p className="user-info">
+        Sorry! Only logged-in users can leave reviews.
+      </p>
     );
   }
 

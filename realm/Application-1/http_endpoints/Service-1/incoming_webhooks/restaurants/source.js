@@ -54,10 +54,9 @@ exports = async function (payload, response) {
       .get("mongodb-atlas")
       .db("sample_restaurants")
       .collection("restaurants"),
-    {
-      count: [{ count = 0 } = {}] = [],
-      page = [],
-    } = await restaurants.aggregate(pipeline(filter, skip, limit)).next(),
+    { count: [{ count = 0 } = {}] = [], page = [] } = await restaurants
+      .aggregate(pipeline(filter, skip, limit))
+      .next(),
     result = {
       count,
       restaurants: page.map(outputTransformRestaurant),
@@ -168,8 +167,8 @@ const pageLinks = (total, page, size, query = {}) => {
     }
   }
 
-  if ((page - 1) * size < total) {
-    if ((page - 1) * size < total - size) {
+  if (page * size < total) {
+    if (page * size < total - size) {
       nav.next = `?${new URLSearchParams({ ...query, page: page + 1 })}`;
     }
 
