@@ -30,6 +30,7 @@ export default function App() {
               />
               {/* else */}
               <Link to={"/restaurants"}> Restaurants </Link>
+              {/* endif */}
             </li>
             <li>
               <User />

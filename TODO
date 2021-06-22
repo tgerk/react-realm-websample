@@ -1,0 +1,3 @@
+style for cards, top-nav, restaurant view, review view
+factor colors, reusable components (Bubble, Gallery, Card, User) into scss modules
+API page/search caching

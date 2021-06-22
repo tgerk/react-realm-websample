@@ -9,21 +9,19 @@ import { useRealm } from "services/realm";
 export default function Restaurant({ id }) {
   const [
       {
-        restaurantsById: { [id]: restaurant = {} },
+        restaurantsById: { [id]: {
+          id: restaurantId,
+          name,
+          description = "[no description]",
+          cuisine,
+          address,
+          reviews = [],
+        } = {} },
       },
       api,
-    ] = useRealm(),
-    {
-      id: restaurantId,
-      name,
-      description = "[no description]",
-      cuisine,
-      address,
-      reviews = [],
-    } = restaurant;
+    ] = useRealm();
 
   useEffect(() => {
-    // I think this is called each time we navigate to the page (because newly-mounted on each navigation by Router/Switch --need confirmation)
     api.getRestaurant(id);
   }, [id, api]);
 
