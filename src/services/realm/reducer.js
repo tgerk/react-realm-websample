@@ -18,8 +18,13 @@ export const actions = {
 export default function realmReducer(state, { type, payload = {} }) {
   switch (type) {
     default:
-    case actions.CHANGE_USER: // no-op since there's no confidential data to purge
-      break;
+    case actions.CHANGE_USER:
+      // Realm-issued tokens belong to RealmContext
+      // (even though based on identity parameters in the UserContext)
+      // When UserContext changes, RealmContext effect will issue API call
+      //  to acquire new access/refresh tokens; stored here for consumers
+      console.log("rotating user tokens", payload )
+      return { ...state, userTokens: payload };
 
     case actions.IN_FLIGHT_BEGIN:
     case actions.IN_FLIGHT_COMPLETE:

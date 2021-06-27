@@ -8,18 +8,20 @@ import { useRealm } from "services/realm";
 
 export default function Restaurant({ id }) {
   const [
-      {
-        restaurantsById: { [id]: {
+    {
+      restaurantsById: {
+        [id]: {
           id: restaurantId,
           name,
           description = "[no description]",
           cuisine,
           address,
           reviews = [],
-        } = {} },
+        } = {},
       },
-      api,
-    ] = useRealm();
+    },
+    api,
+  ] = useRealm();
 
   useEffect(() => {
     api.getRestaurant(id);

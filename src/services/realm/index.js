@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useReducer, useState } from "react";
 
 import { UserContext } from "services/user";
 
-import realmReducer, { actions } from "./reducer";
+import realmReducer from "./reducer";
 import RealmAPI from "./api";
 
 const RealmContext = React.createContext([{}, () => {}]);
@@ -16,10 +16,9 @@ export default function RealmContextProvider(props) {
       () => new RealmAPI((type, payload) => dispatch({ type, payload }))
     );
 
-  const [currentUser] = useContext(UserContext); // grab user-state changes
+  const [currentUser] = useContext(UserContext); // observe user-state changes
   useEffect(() => {
     console.info("Realm context changing");
-    dispatch({ type: actions.CHANGE_USER });
     api.auth(currentUser);
   }, [api, currentUser]);
 

@@ -75,10 +75,18 @@ main {
       text-decoration: none;
     }
 
-    .firstPage { order: -2; }
-    .prevPage { order: -1; }
-    .nextPage { order: 1; }
-    .lastPage { order: 2; }
+    .firstPage {
+      order: -2;
+    }
+    .prevPage {
+      order: -1;
+    }
+    .nextPage {
+      order: 1;
+    }
+    .lastPage {
+      order: 2;
+    }
   }
 
   gap: 8px;
@@ -188,5 +196,4 @@ form.review {
 }
 
 .pulse {
-
 }

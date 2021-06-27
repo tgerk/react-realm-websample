@@ -2,10 +2,14 @@ import axios from "axios";
 import * as Realm from "realm-web";
 
 import "services/storage-json";
+import "services/async-property";
 
 import { actions } from "./reducer";
 
-const SESSION_REALM_TOKENS_KEY = "realmTokens";
+const SESSION_REALM_TOKENS_KEY = "realmTokens",
+  realmApp = new Realm.App({
+    id: process.env.REACT_APP_REALM_APP_ID,
+  });
 
 const ignoreAbortError = (err) => {
   if (!err instanceof Error || err.name !== "AbortError") {
@@ -13,111 +17,89 @@ const ignoreAbortError = (err) => {
   }
 };
 
+function createHttpRealm(tokens, dispatch) {
+  const { access_token } = tokens,
+    http = axios.create({
+      baseURL: process.env.REACT_APP_BASE_URL_REALM,
+      headers: {
+        "Content-type": "application/json",
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+
+  http.interceptors.request.use((config) => {
+    dispatch(actions.IN_FLIGHT_BEGIN);
+    return config;
+  });
+  http.interceptors.response.use((response) => {
+    dispatch(actions.IN_FLIGHT_COMPLETE);
+    return response;
+  });
+
+  dispatch(actions.CHANGE_USER, tokens);
+  return http;
+}
+
 class RealmAPI {
   constructor(dispatch) {
     this.dispatch = dispatch;
-    this.realmApp = new Realm.App({ id: process.env.REACT_APP_REALM_APP_ID });
 
-    // setup three clients, two cannot be used without authorization
-    this.http = axios.create({
-      baseURL: process.env.REACT_APP_BASE_URL,
-      headers: {
-        "Content-type": "application/json",
-      },
-    });
-    this.httpRealm = new Promise((resolve, reject) => {
-      this.setHttpRealm = resolve;
-    });
-    this.realmUser = new Promise((resolve, reject) => {
-      this.setRealmUser = resolve;
-    });
+    // API gateways are created in suspense:  represents a promise that
+    //  will be resolved later (through a setter), and has an async getter
+    Object.defineAsyncProperty(this, "httpRealm");
+    Object.defineAsyncProperty(this, "realmUser");
   }
 
-  auth(user) {
-    const self = this; // for nested functions
+  async auth(user) {
+    // prepare axios client to pass authorization to webhooks
+    this.authHttp();
 
-    // There are two patterns:  call functions via Web-SDK, or via webhooks
-    // each has its own auth scheme, spawned concurrently
+    // and also authenticate Realm-Web SDK
+    this.authRealmSDK(user);
+  }
 
-    if (!this.setHttpRealm) {
-      return; // eslint-disable-next-line
-      this.httpRealm = new Promise((resolve, reject) => {
-        this.setHttpRealm = resolve;
-      });
-    }
-
-    authHttp(user).then((v) => {
-      this.setHttpRealm(v);
-      delete this.setHttpRealm;
-    });
-
-    if (!this.setRealmUser) {
-      this.realmUser = new Promise((resolve, reject) => {
-        this.setRealmUser = resolve;
-      });
-    }
-
-    return; // eslint-disable-next-line
-    authRealm(user).then((v) => {
-      this.setRealmUser(v);
-      delete this.setRealmUser;
-    });
-
-    function authHttp(user) {
-      // Get a bearer token for web-hooks requiring "Application Authentication"
-      // Webhook Application Authentication does include Anon-user; these have been changed
-      //  to run with "System" authentication.  Expect anon-user may be useful for indirect cases?
-
-      const { access_token } = sessionStorage.getJSONItem(
+  authHttp() {
+    const dispatch = this.dispatch,
+      tokens = sessionStorage.getJSONItem(
         SESSION_REALM_TOKENS_KEY,
         {}
-      );
-      if (access_token) {
-        // TODO: verify or refresh access_token
-        return Promise.resolve(createHttpRealm(access_token));
-      }
+      ),
+      { access_token } = tokens;
 
-      console.info("getting realm anonymous user credential");
-      return axios
-        .post(process.env.REACT_APP_BASE_URL_REALM_AUTH_ANON, {
-          headers: {
-            "Content-type": "application/json",
-          },
-        })
-        .then(({ data: tokens }) => {
-          sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
-          return createHttpRealm(tokens.access_token);
-        });
-
-      function createHttpRealm(access_token) {
-        const http = axios.create({
-          baseURL: process.env.REACT_APP_BASE_URL_REALM,
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${access_token}`,
-          },
-        });
-
-        http.interceptors.request.use((config) => {
-          self.dispatch(actions.IN_FLIGHT_BEGIN);
-          return config;
-        });
-        http.interceptors.response.use((response) => {
-          self.dispatch(actions.IN_FLIGHT_COMPLETE);
-          return response;
-        });
-
-        return http;
-      }
+    if (access_token) {
+      // TODO: verify or refresh access_token
+      this.httpRealm = createHttpRealm(tokens, dispatch);
+      return;
     }
 
-    function authRealm(user) {
-      console.info("logging into realm app anonymously");
-      return this.realmApp.logIn(Realm.Credentials.anonymous());
+    // Get a bearer token for web-hooks requiring "Application Authentication"
+    // (Webhook Application Authentication does not support Anon-user and run
+    //  with "System" authentication.  'Tis a mystery what use is anon-user auth
+    //  if not utilized for accounting or [gasp!] server-side session)
 
-      // or, for example, if Google authentication provider is enabled:
-      // this.realmUser = realmApp.logIn(Realm.Credentials.google(user.google.credential));
-    }
+    console.info("getting realm anonymous user credential");
+    axios
+      .post(process.env.REACT_APP_BASE_URL_REALM_AUTH_ANON, {
+        headers: {
+          "Content-type": "application/json",
+        },
+      })
+      .then(({ data: tokens }) => {
+        sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
+        this.httpRealm = createHttpRealm(tokens, dispatch);
+      });
+  }
+
+  authRealmSDK() {
+    // if user has a credential and Google authentication provider is enabled:
+    // return realmApp.logIn(Realm.Credentials.google(user.google.credential));
+
+    // skip, it's not used!
+    return; // eslint-disable-next-line
+    console.info("logging into realm app anonymously");
+    realmApp.logIn(Realm.Credentials.anonymous()).then((user) => {
+      this.realmUser = user;
+    });
   }
 
   async getCuisines() {
