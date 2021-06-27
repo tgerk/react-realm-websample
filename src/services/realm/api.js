@@ -60,10 +60,7 @@ class RealmAPI {
 
   authHttp() {
     const dispatch = this.dispatch,
-      tokens = sessionStorage.getJSONItem(
-        SESSION_REALM_TOKENS_KEY,
-        {}
-      ),
+      tokens = sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {}),
       { access_token } = tokens;
 
     if (access_token) {
