@@ -6,10 +6,11 @@ import "services/async-property";
 
 import { actions } from "./reducer";
 
-const SESSION_REALM_TOKENS_KEY = "realmTokens",
-  realmApp = new Realm.App({
-    id: process.env.REACT_APP_REALM_APP_ID,
-  });
+export const SESSION_REALM_TOKENS_KEY = "realmTokens";
+
+const realmApp = new Realm.App({
+  id: process.env.REACT_APP_REALM_APP_ID,
+});
 
 const ignoreAbortError = (err) => {
   if (!err instanceof Error || err.name !== "AbortError") {
@@ -76,7 +77,9 @@ class RealmAPI {
 
     console.info("getting realm anonymous user credential");
     axios
-      .post(process.env.REACT_APP_BASE_URL_REALM_AUTH_ANON, {
+      .request({
+        url: process.env.REACT_APP_BASE_URL_REALM_AUTH_ANON,
+        method: "POST",
         headers: {
           "Content-type": "application/json",
         },
@@ -85,6 +88,35 @@ class RealmAPI {
         sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
         this.httpRealm = createHttpRealm(tokens, dispatch);
       });
+  }
+
+  authRefresh({ access_token, refresh_token }) {
+    const dispatch = this.dispatch;
+
+    if (this.refreshInProgress) {
+      console.info("token refresh already in progress");
+      return;
+    }
+
+    this.refreshInProgress = true;
+    console.log("refreshing realm access token", access_token);
+    axios
+      .request({
+        url: process.env.REACT_APP_BASE_URL_REALM_AUTH_REFRESH,
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${refresh_token}`,
+        },
+      })
+      .then(({ data: tokens }) => {
+        sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
+        this.httpRealm = createHttpRealm(tokens, dispatch);
+      });
+
+    setTimeout(() => {
+      delete this.refreshInProgress;
+    }, 15 * 60 * 1000);
   }
 
   authRealmSDK() {
@@ -116,7 +148,7 @@ class RealmAPI {
     // I could dispatch an action with a conditional callback, but then I wouldn't
     //  be able to return the [cancelable] Promise...sad :(
 
-    //TODO: caching
+    //TODO: caching --> use graphql & ApolloClient, lol.
 
     const source = axios.CancelToken.source(),
       q = this.httpRealm

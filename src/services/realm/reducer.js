@@ -23,15 +23,24 @@ export default function realmReducer(state, { type, payload = {} }) {
       // (even though based on identity parameters in the UserContext)
       // When UserContext changes, RealmContext effect will issue API call
       //  to acquire new access/refresh tokens; stored here for consumers
-      console.log("rotating user tokens", payload);
-      return { ...state, userTokens: payload };
+      const { userTokens = {} } = state;
+      for (const k in payload) {
+        if (!(k in userTokens) || payload[k] !== userTokens[k]) {
+          console.log("updating user tokens", {
+            old: userTokens,
+            merge: payload,
+          });
+          return { ...state, userTokens: { ...userTokens, ...payload } };
+        }
+      }
+      break;
 
     case actions.IN_FLIGHT_BEGIN:
     case actions.IN_FLIGHT_COMPLETE:
       const { inFlight: orig, ...rest } = state,
         inFlight = inFlightReducer(orig, { type, payload });
       if (inFlight) {
-        return { ...rest, inFlight };
+        return { ...state, inFlight };
       }
       return rest;
 
