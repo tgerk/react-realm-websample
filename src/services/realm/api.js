@@ -60,20 +60,14 @@ class RealmAPI {
   }
 
   authHttp() {
-    const dispatch = this.dispatch,
-      tokens = sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {}),
-      { access_token } = tokens;
+    const tokens = sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {}),
+      dispatch = this.dispatch;
 
-    if (access_token) {
+    if ("access_token" in tokens) {
       // TODO: verify or refresh access_token
       this.httpRealm = createHttpRealm(tokens, dispatch);
       return;
     }
-
-    // Get a bearer token for web-hooks requiring "Application Authentication"
-    // (Webhook Application Authentication does not support Anon-user and run
-    //  with "System" authentication.  'Tis a mystery what use is anon-user auth
-    //  if not utilized for accounting or [gasp!] server-side session)
 
     console.info("getting realm anonymous user credential");
     axios
@@ -90,15 +84,21 @@ class RealmAPI {
       });
   }
 
-  authRefresh({ access_token, refresh_token }) {
-    const dispatch = this.dispatch;
+  authRefresh(tokens) {
+    const { access_token, refresh_token } = tokens,
+      dispatch = this.dispatch;
 
+    // issue only one token refresh request per 5 minutes
     if (this.refreshInProgress) {
       console.info("token refresh already in progress");
       return;
+    } else {
+      this.refreshInProgress = true;
+      setTimeout(() => {
+        delete this.refreshInProgress;
+      }, 5 * 60 * 1000);
     }
 
-    this.refreshInProgress = true;
     console.log("refreshing realm access token", access_token);
     axios
       .request({
@@ -109,14 +109,11 @@ class RealmAPI {
           Authorization: `Bearer ${refresh_token}`,
         },
       })
-      .then(({ data: tokens }) => {
+      .then(({ data }) => {
+        tokens = {...tokens, ...data};  // over-write the old access_token
         sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
         this.httpRealm = createHttpRealm(tokens, dispatch);
       });
-
-    setTimeout(() => {
-      delete this.refreshInProgress;
-    }, 15 * 60 * 1000);
   }
 
   authRealmSDK() {
@@ -132,12 +129,14 @@ class RealmAPI {
   }
 
   async getCuisines() {
+    console.assert("deprecated")
     const source = axios.CancelToken.source(),
       q = this.httpRealm
         .then((http) => http.get("cuisines", { cancelToken: source.token }))
         .then(({ data }) => this.dispatch(actions.GET_CUISINES, data))
         .catch(ignoreAbortError);
 
+    // why returning the promise, and not just the cancel (cleanup) function?
     q.cancel = source.cancel;
     return q;
   }
@@ -163,11 +162,13 @@ class RealmAPI {
         )
         .catch(ignoreAbortError);
 
+    // why returning the promise, and not just the cancel (cleanup) function?
     q.cancel = source.cancel;
     return q;
   }
 
   async getRestaurant(id) {
+    console.assert("deprecated")
     return this.httpRealm
       .then((http) =>
         http.get("restaurants", {
