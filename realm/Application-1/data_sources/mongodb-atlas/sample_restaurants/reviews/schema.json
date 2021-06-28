@@ -6,10 +6,16 @@
         "date": {
             "bsonType": "date"
         },
+        "name": {
+            "bsonType": "string"
+        },
         "restaurant_id": {
             "bsonType": "objectId"
         },
         "text": {
+            "bsonType": "string"
+        },
+        "user_id": {
             "bsonType": "string"
         }
     },

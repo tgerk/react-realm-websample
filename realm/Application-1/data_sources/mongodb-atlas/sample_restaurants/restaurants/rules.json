@@ -1,18 +1,9 @@
 {
     "collection": "restaurants",
     "database": "sample_restaurants",
-    "filters": [
-        {
-            "name": "paging",
-            "query": {
-                "limit": "LIMIT(20)"
-            },
-            "apply_when": {}
-        }
-    ],
     "roles": [
         {
-            "name": "default",
+            "name": "everyone",
             "apply_when": {},
             "read": true,
             "write": false,

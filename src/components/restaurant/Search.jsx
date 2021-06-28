@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import Bubble from "Bubble";
 
 import { useRealm, useDebouncedEffect } from "services/realm";
+import { useCuisines } from "services/graphql";
 
 const ALL_CUISINES = "All Cuisines";
 
 export default function SearchRestaurants({ locationQuery }) {
   // note: search parameters in props are used as initial condition; updates to this form do not directly
   //  update the location (where the props come from):  user must do page navigation to change props
-  const [{ cuisines = [], restaurants: { query: lastQuery = {} } = {} }, api] =
-      useRealm(),
+  const cuisines = useCuisines(),
+    [{ restaurants: { query: lastQuery = {} } = {} }, api] = useRealm(),
     { page, skip, size, limit, ...currentQuery } = {
       ...locationQuery,
       ...lastQuery,
@@ -33,12 +34,6 @@ export default function SearchRestaurants({ locationQuery }) {
       return pagination;
     })();
 
-  useEffect(() => {
-    const q = api.getCuisines();
-
-    return q.cancel;
-  }, [api]);
-
   const updateQuery = ({ target: { name, value } }) => {
     if (value === "" || (name === "cuisine" && value === ALL_CUISINES)) {
       const { [name]: _, ...rest } = query;
@@ -47,7 +42,6 @@ export default function SearchRestaurants({ locationQuery }) {
       setQuery({ ...query, [name]: value });
     }
   };
-
 
   // debouncing provides automatic and periodic updates as search changes
   useDebouncedEffect(

@@ -29,23 +29,6 @@
         "cuisine": {
             "bsonType": "string"
         },
-        "grades": {
-            "bsonType": "array",
-            "items": {
-                "bsonType": "object",
-                "properties": {
-                    "date": {
-                        "bsonType": "date"
-                    },
-                    "grade": {
-                        "bsonType": "string"
-                    },
-                    "score": {
-                        "bsonType": "int"
-                    }
-                }
-            }
-        },
         "name": {
             "bsonType": "string"
         },

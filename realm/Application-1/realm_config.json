@@ -6,7 +6,8 @@
     "deployment_model": "LOCAL",
     "environment": "development",
     "allowed_request_origins": [
+        "https://application-1-sdtbu.mongodbstitch.com",
         "http://localhost:3000",
-        "https://application-1-sdtbu.mongodbstitch.com"
+        "http://localhost:4500"
     ]
 }
