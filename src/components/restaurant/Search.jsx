@@ -10,7 +10,7 @@ const ALL_CUISINES = "All Cuisines";
 export default function SearchRestaurants({ locationQuery }) {
   // note: search parameters in props are used as initial condition; updates to this form do not directly
   //  update the location (where the props come from):  user must do page navigation to change props
-  const cuisines = useCuisines(),
+  const [cuisines] = useCuisines(),
     [{ restaurants: { query: lastQuery = {} } = {} }, api] = useRealm(),
     { page, skip, size, limit, ...currentQuery } = {
       ...locationQuery,

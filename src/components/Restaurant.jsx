@@ -1,31 +1,20 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 
 import Gallery from "Gallery";
 import ReviewCard from "restaurant/review/Card";
 
-import { useRealm } from "services/realm";
+import { useRestaurant } from "services/graphql";
 
 export default function Restaurant({ id }) {
-  const [
-    {
-      restaurantsById: {
-        [id]: {
-          id: restaurantId,
-          name,
-          description = "[no description]",
-          cuisine,
-          address,
-          reviews = [],
-        } = {},
-      },
-    },
-    api,
-  ] = useRealm();
-
-  useEffect(() => {
-    api.getRestaurant(id);
-  }, [id, api]);
+  const [{
+    _id: restaurantId,
+    name,
+    description = "[no description]",
+    cuisine,
+    address,
+    reviews = [],
+  }] = useRestaurant(id);
 
   if (restaurantId !== id) {
     return <p className="user-info pulse">Loading...</p>;

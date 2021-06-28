@@ -9,7 +9,7 @@ import {
 
 import { useRealm } from "services/realm";
 
-import { CUISINES_QUERY } from "./queries";
+import { CUISINES_QUERY, RESTAURANT_QUERY } from "./queries";
 
 function makeClient({ access_token } = {}) {
   const options = {
@@ -27,49 +27,57 @@ function makeClient({ access_token } = {}) {
   });
 }
 
+// module variable to hold a bound function needed for authentication-error recovery
+// TODO: probably could move this into a custom ApolloLink middleware--that seems the
+//  preferred facility for handling common classes of error;
 let refreshUserTokens = () => {};
+function handleNetworkError({ result: { error_code, error } = {} }) {
+  if (
+    error_code === "InvalidSession" &&
+    error.match(/access token expired$/)
+  ) {
+    refreshUserTokens();
+  }
+}
 
 export default function GraphContextProvider(props) {
   const [{ userTokens = {} }, api] = useRealm(), // observe user token changes
-    firstRenderComplete = useRef(),
-    [client, setClient] = useState(makeClient(userTokens));
+    [client, setClient] = useState(makeClient(userTokens)),
+    accessTokenRef = useRef(userTokens.access_token);
 
+  // to kick off a process that will update userTokens in RealmContext
   refreshUserTokens = api.authRefresh.bind(api, userTokens);
 
   useEffect(() => {
-    // skip this effect the first time, only want to make a new client on *changes* to the initial value
-    if (!firstRenderComplete.current) {
-      firstRenderComplete.current = true;
-      return;
+    // skip this effect if user access_token is not changing
+    // initial value should be used for the first render, but then this effect would trigger
+    //  an immediate re-render even though the initial value has not changed (it's not
+    //  apparent how to set dependencies' previous/initial values for the first call, so
+    //  we duplicate the dependencies capability with a ref)
+    if (userTokens.access_token !== accessTokenRef.current) {
+      console.info("Apollo client updating tokens", userTokens);
+      accessTokenRef.current = userTokens.access_token;
+      setClient(makeClient(userTokens));
     }
-
-    console.info("Apollo client changing for changing tokens", userTokens);
-    setClient(makeClient(userTokens));
   }, [userTokens]);
 
   return <ApolloProvider client={client} {...props} />;
 }
 
-// this hook runs many more times than probably necessary.  This depends on changing contexts
-//  during initial page load, as well as on the sequence of events in sending a query and
-//  receiving results.  Even more if
 export function useCuisines() {
-  const result = useQuery(CUISINES_QUERY),
-    { error: { networkError } = {}, data: { cuisines = [] } = {} } = result;
-  // console.debug(result);
+  const { loading, error = {} , data: { cuisines = [] } = {} } = useQuery(CUISINES_QUERY),
+    { networkError } = error;
 
-  if (networkError) {
-    const { error_code, error: error_description } = networkError.result;
-    if (
-      error_code === "InvalidSession" &&
-      error_description.match(/access token expired$/)
-    ) {
-      refreshUserTokens(); // kick off a process that will update userTokens in RealmContext
-      // want (need) to call this just once, seems there are many instances(?) of the calling
-      //  component as UserContext and RealmContext effects run
-      // NB: cannot conditionally call useMemo
-    }
-  }
+  if (networkError) handleNetworkError(networkError);
 
-  return cuisines;
+  return [cuisines, loading, error];
+}
+
+export function useRestaurant(id) {
+  const { loading, error = {} , data: { restaurant = {}, reviews = [] } = {} } = useQuery(RESTAURANT_QUERY, { variables: { id }}),
+    { networkError } = error;
+
+  if (networkError) handleNetworkError(networkError);
+
+  return [{...restaurant, reviews}, loading, error];
 }
