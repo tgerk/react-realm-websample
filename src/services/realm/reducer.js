@@ -4,7 +4,8 @@
 // I suggest, as complexity increases, separating concerns among several contexts+reducers.
 //  Alternatively, compose a reducer from smaller sub-sections of the context-state object
 export const actions = {
-  CHANGE_USER: "changing user",
+  CURRENT_USER: "set current user",
+  CHANGE_TOKENS: "set user tokens",
   GET_RESTAURANTS: "get restaurants",
   GET_RESTAURANT: "get restaurant",
   GET_CUISINES: "get cuisines",
@@ -17,12 +18,11 @@ export const actions = {
 
 export default function realmReducer(state, { type, payload = {} }) {
   switch (type) {
-    default:
-    case actions.CHANGE_USER:
+    case actions.CHANGE_TOKENS:
       // Realm-issued tokens belong to RealmContext
-      // (even though based on identity parameters in the UserContext)
-      // When UserContext changes, RealmContext effect will issue API call
-      //  to acquire new access/refresh tokens; stored here for consumers
+      // (even though based on identity parameters in the useCurrentUser)
+      // When useCurrentUser changes, RealmContext effect will call API
+      //  to acquire/refresh tokens; stored here for consumers
       const { userTokens = {} } = state;
       for (const k in payload) {
         if (!(k in userTokens) || payload[k] !== userTokens[k]) {
@@ -35,14 +35,24 @@ export default function realmReducer(state, { type, payload = {} }) {
       }
       break;
 
+    case actions.CURRENT_USER: {
+      const { user, ...rest } = state;
+      if (payload) {
+        return { ...state, user: payload };
+      }
+
+      return rest;
+    }
+
     case actions.IN_FLIGHT_BEGIN:
-    case actions.IN_FLIGHT_COMPLETE:
+    case actions.IN_FLIGHT_COMPLETE: {
       const { inFlight: orig, ...rest } = state,
         inFlight = inFlightReducer(orig, { type, payload });
       if (inFlight) {
         return { ...state, inFlight };
       }
       return rest;
+    }
 
     case actions.GET_CUISINES:
       return { ...state, cuisines: payload };
@@ -76,6 +86,9 @@ export default function realmReducer(state, { type, payload = {} }) {
         },
       };
     }
+
+    default:
+      break;
   }
 
   return state;

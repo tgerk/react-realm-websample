@@ -147,11 +147,11 @@ article.card {
   }
 }
 
-form.login {
+form#login {
   text-align: right;
 }
 
-form.login,
+form#login,
 form.review {
   // submit-form
 
@@ -196,4 +196,12 @@ form.review {
 }
 
 .pulse {
+}
+
+.error {
+  color: red;
+}
+.error::before {
+  content: url("assets/error.png") /
+    "Icon made by Pixel perfect from www.flaticon.com";
 }

@@ -1,26 +1,21 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import relativeDate from "relative-date";
 
 import Card from "Card";
 
-import { UserContext } from "services/user";
 import { useRealm } from "services/realm";
+import { useDeleteReview } from "services/graphql/mutations";
 
-export default function ReviewCard({ restaurantId, ...review }) {
-  const { id: reviewId, userId, name: userName, date, text } = review,
-    [currentUser] = useContext(UserContext),
-    [, api] = useRealm();
-
-  function removeReview() {
-    api.deleteReview(reviewId, userId, restaurantId);
-  }
+export default function ReviewCard({ restaurantId, review }) {
+  const { _id: reviewId, user_id: userId, name: userName, date, text } = review,
+    [{ user }] = useRealm(),
+    [deleteReview] = useDeleteReview(user, restaurantId, reviewId);
 
   const actions = [];
-  if (currentUser?.id === userId && reviewId) {
-    // possible the review is local only (optimistic update) and does not yet have an id
+  if (reviewId && userId === user?.id) {
     actions.push(
-      <button onClick={removeReview}> Remove </button>,
+      <button onClick={deleteReview}> Remove </button>,
       <Link
         to={{
           pathname: `/restaurant/${restaurantId}/review`,

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Bubble from "Bubble";
 
 import { useRealm, useDebouncedEffect } from "services/realm";
-import { useCuisines } from "services/graphql";
+import { useCuisines } from "services/graphql/queries";
 
 const ALL_CUISINES = "All Cuisines";
 

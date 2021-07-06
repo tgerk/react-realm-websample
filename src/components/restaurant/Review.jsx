@@ -1,37 +1,22 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 
-import { UserContext } from "services/user";
 import { useRealm } from "services/realm";
+import { useAddEditReview } from "services/graphql/mutations";
 
-export default function Review({
-  restaurantId,
-  review: { id: reviewId, text: initialText } = {},
-  history,
-}) {
-  const [reviewText, setReviewText] = useState(initialText),
-    [currentUser] = useContext(UserContext),
-    [, api] = useRealm();
+export default function Review({ restaurantId, review = {}, history }) {
+  const { _id: reviewId, text: initialText } = review,
+    [reviewText, setReviewText] = useState(initialText),
+    [{ user = {} }] = useRealm(),
+    [addEditReview] = useAddEditReview(user, restaurantId, reviewId);
 
   function saveReview(event) {
     event.preventDefault();
-
-    ((data) =>
-      reviewId ? api.updateReview(reviewId, data) : api.createReview(data))({
-      restaurantId: restaurantId,
-      userId: currentUser.id,
-      name: currentUser.name,
-      text: reviewText,
-    });
-
+    addEditReview(reviewText);
     history.push(`/restaurant/${restaurantId}`);
   }
 
-  if (!currentUser) {
-    return (
-      <p className="user-info">
-        Sorry! Only logged-in users can leave reviews.
-      </p>
-    );
+  if (!user || user.providerType === "anon-user") {
+    return <p className="user-info">Sorry! Log-in to leave a review.</p>;
   }
 
   return (

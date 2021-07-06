@@ -1,31 +1,31 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 
 import Bubble from "Bubble";
+import Error from "Error";
 
-import { UserContext } from "services/user";
+import { useCurrentUser } from "services/user";
+import { useRealm } from "services/realm";
 
+// Login & Logout functional components are local,
+//  these are no longer reusable, but that's not my concern here
 export default function User() {
-  const [currentUser, setCurrentUser] = useContext(UserContext);
+  const [currentUser, setCurrentUser] = useCurrentUser();
+  const [{ user: realmUser }] = useRealm();
 
-  function Logout() {
+  function Logout({ name }) {
     function handleLogout() {
-      setCurrentUser(null);
+      setCurrentUser();
     }
-
     return (
       <button className="logout" name="submit" onClick={handleLogout}>
-        Logout {currentUser.name}
+        Logout {name}
       </button>
     );
   }
 
-  if (currentUser) {
-    return <Logout />;
-  }
-
   function Login({ refFocus }) {
     const [user, setUser] = useState(currentUser || {}),
-      { userName, userId } = user;
+      { email, password, authError: error } = user;
 
     const updateUser = ({ target: { name, value } }) => {
       setUser({ ...user, [name]: value });
@@ -33,18 +33,23 @@ export default function User() {
 
     function handleLogin(event) {
       event.preventDefault();
+
+      // LATER dispatch to login page of selected OIDC providers, else
+
       setCurrentUser(user);
     }
 
     return (
-      <form className="login" onSubmit={handleLogin}>
+      <form id="login" onSubmit={handleLogin}>
+        {error && <Error error={error} />}
         <div>
-          <label htmlFor="user">Username</label>
+          <label htmlFor="email">Email</label>
           <input
-            id="name"
-            name="name"
-            type="text"
-            value={userName}
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="username"
+            value={email}
             onChange={updateUser}
             ref={refFocus}
             required
@@ -52,12 +57,13 @@ export default function User() {
         </div>
 
         <div>
-          <label htmlFor="id">ID</label>
+          <label htmlFor="password">Password</label>
           <input
-            id="id"
-            name="id"
-            type="text"
-            value={userId}
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
             onChange={updateUser}
             required
           />
@@ -70,8 +76,14 @@ export default function User() {
     );
   }
 
+  if (currentUser) {
+    return (
+      <Logout name={realmUser?.profile.name || realmUser?.profile.email} />
+    );
+  }
+
   return (
-    <Bubble affordance={<button>Login</button>}>
+    <Bubble affordance={<button>Login</button>} open={!!currentUser?.authError}>
       <Login />
     </Bubble>
   );

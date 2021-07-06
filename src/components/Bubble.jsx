@@ -1,11 +1,11 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
-export default function Bubble({ affordance, children, ...props }) {
+export default function Bubble({ affordance, children, open, ...props }) {
   const refAffordance = useRef(),
     refBubble = useRef(),
     refFocus = useRef();
 
-  // do I need a pure JS function to avoid re-renders on loss of focus?
+  // use pure JS function to avoid re-renders on loss of focus
   // TL;DR of https://www.eventbrite.com/engineering/a-story-of-a-react-re-rendering-bug/
   //  the onBlur handler should not cause a re-render
   function showBubble() {
@@ -29,8 +29,14 @@ export default function Bubble({ affordance, children, ...props }) {
     }
   }
 
+  useEffect(() => {
+    if (open) {
+      showBubble();
+    }
+  }, [open]);
+
   return (
-    <div className="bubble-root">
+    <div className="bubble-root" {...props}>
       {React.cloneElement(affordance, {
         onClick: showBubble,
         ref: refAffordance,

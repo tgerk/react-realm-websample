@@ -4,17 +4,19 @@ import { Link } from "react-router-dom";
 import Gallery from "Gallery";
 import ReviewCard from "restaurant/review/Card";
 
-import { useRestaurant } from "services/graphql";
+import { useRestaurant } from "services/graphql/queries";
 
 export default function Restaurant({ id }) {
-  const [{
-    _id: restaurantId,
-    name,
-    description = "[no description]",
-    cuisine,
-    address,
-    reviews = [],
-  }] = useRestaurant(id);
+  const [
+    {
+      _id: restaurantId,
+      name,
+      description = "[no description]",
+      cuisine,
+      address,
+      reviews = [],
+    },
+  ] = useRestaurant(id);
 
   if (restaurantId !== id) {
     return <p className="user-info pulse">Loading...</p>;
@@ -37,7 +39,7 @@ export default function Restaurant({ id }) {
         {reviews.length > 0 ? (
           <Gallery>
             {reviews.map((review, i) => (
-              <ReviewCard restaurantId={id} {...review} key={i} />
+              <ReviewCard restaurantId={id} review={review} key={i} />
             ))}
           </Gallery>
         ) : (

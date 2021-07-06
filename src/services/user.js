@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 
 const SESSION_CURRENT_USER_KEY = "currentUser";
 
@@ -6,18 +6,33 @@ export const UserContext = React.createContext([null, () => {}]);
 
 export default function UserContextProvider(props) {
   const [user, setUser] = useState(
-    sessionStorage.getJSONItem(SESSION_CURRENT_USER_KEY, null)
-  ); // components access current user through context
+      sessionStorage.getJSONItem(SESSION_CURRENT_USER_KEY, null)
+    ),
+    setCurrentUser = useCallback(
+      (user) => {
+        if (user) {
+          sessionStorage.setJSONItem(SESSION_CURRENT_USER_KEY, user);
+        } else {
+          sessionStorage.removeItem(SESSION_CURRENT_USER_KEY);
+        }
 
-  function setCurrentUser(user) {
-    if (user) {
-      sessionStorage.setJSONItem(SESSION_CURRENT_USER_KEY, user);
-    } else {
-      sessionStorage.removeItem(SESSION_CURRENT_USER_KEY);
-    }
+        setUser(user);
+      },
+      [setUser]
+    ),
+    onAuthError = useCallback(
+      (authError) => setCurrentUser({ ...user, authError }),
+      [user, setCurrentUser]
+    );
 
-    setUser(user);
-  }
+  return (
+    <UserContext.Provider
+      value={[user, setCurrentUser, onAuthError]}
+      {...props}
+    />
+  );
+}
 
-  return <UserContext.Provider value={[user, setCurrentUser]} {...props} />;
+export function useCurrentUser() {
+  return useContext(UserContext);
 }

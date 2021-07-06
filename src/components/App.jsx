@@ -14,25 +14,29 @@ import GraphContextProvider from "services/graphql";
 export default function App() {
   return (
     <UserContextProvider>
+      {/*
+       * LATER add a route(s) for redirect from authentication provider(s)
+       *  put provider and code/state from query string in current user context
+       */}
       <RealmContextProvider>
         <GraphContextProvider>
           <nav>
             <a href="/"> Restaurant Reviews </a>
             <ul>
               <li>
-                {/* TODO: when the restaurant list page is showing */}
                 <Route
-                  render={({ location: { search } }) => (
-                    <Search
-                      locationQuery={Object.fromEntries(
-                        new URLSearchParams(search).entries()
-                      )}
-                    />
-                  )}
+                  render={({ location: { pathname: path, search } }) =>
+                    !path.match(/^\/restaurant\b/i) ? (
+                      <Search
+                        locationQuery={Object.fromEntries(
+                          new URLSearchParams(search).entries()
+                        )}
+                      />
+                    ) : (
+                      <Link to={"/restaurants"}> Restaurants </Link>
+                    )
+                  }
                 />
-                {/* else */}
-                <Link to={"/restaurants"}> Restaurants </Link>
-                {/* endif */}
               </li>
               <li>
                 <User />

@@ -37,7 +37,6 @@ function createHttpRealm(tokens, dispatch) {
     return response;
   });
 
-  dispatch(actions.CHANGE_USER, tokens);
   return http;
 }
 
@@ -51,26 +50,45 @@ class RealmAPI {
     Object.defineAsyncProperty(this, "realmUser");
   }
 
-  async auth(user) {
-    // prepare axios client to pass authorization to webhooks
-    this.authHttp();
+  // called each time app's user context changes
+  auth(user, onAuthError) {
+    Promise.all([
+      // get anon-user tokens, prepare axios client
+      // (may reject on server, app-config, or network issues)
+      this.getAnonTokens().then((tokens) => {
+        this.dispatch(actions.CHANGE_TOKENS, tokens);
 
-    // and also authenticate Realm-Web SDK
-    this.authRealmSDK(user);
+        this.httpRealm = createHttpRealm(tokens, this.dispatch);
+      }),
+
+      // and also:
+      // get authenticated Realm-Web SDK user
+      // (may reject on invalid credentials, server, app-config, or network issues)
+      this.getRealmUser(user).then((user) => {
+        // for display purposes
+        this.dispatch(actions.CURRENT_USER, user);
+
+        this.realmUser = user;
+      }),
+    ]).catch((error) => {
+      // revert both portals to initial unresolved state
+      Object.defineAsyncProperty(this, "httpRealm");
+      Object.defineAsyncProperty(this, "realmUser");
+
+      // raise authentication error through user object
+      onAuthError(error);
+    });
   }
 
-  authHttp() {
-    const tokens = sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {}),
-      dispatch = this.dispatch;
-
+  getAnonTokens() {
+    const tokens = sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {});
     if ("access_token" in tokens) {
       // TODO: verify or refresh access_token
-      this.httpRealm = createHttpRealm(tokens, dispatch);
-      return;
+      return Promise.resolve(tokens);
     }
 
     console.info("getting realm anonymous user credential");
-    axios
+    return axios
       .request({
         url: process.env.REACT_APP_BASE_URL_REALM_AUTH_ANON,
         method: "POST",
@@ -80,14 +98,12 @@ class RealmAPI {
       })
       .then(({ data: tokens }) => {
         sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
-        this.httpRealm = createHttpRealm(tokens, dispatch);
+        return tokens;
       });
   }
 
-  authRefresh(tokens) {
-    const { access_token, refresh_token } = tokens,
-      dispatch = this.dispatch;
-
+  refreshAuth(tokens) {
+    // all queries simultaneously in-flight will fail for same reason: expired access_token
     // issue only one token refresh request per 5 minutes
     if (this.refreshInProgress) {
       console.info("token refresh already in progress");
@@ -99,8 +115,19 @@ class RealmAPI {
       }, 5 * 60 * 1000);
     }
 
-    console.log("refreshing realm access token", access_token);
-    axios
+    // defer future queries until refresh is resolved
+    Object.defineAsyncProperty(this, "httpRealm");
+    this.refreshAuthToken(tokens).then((tokens) => {
+      this.dispatch(actions.CHANGE_TOKENS, tokens);
+
+      this.httpRealm = createHttpRealm(tokens, this.dispatch);
+    });
+  }
+
+  refreshAuthToken(tokens) {
+    const { refresh_token } = tokens;
+    console.log("refreshing realm access token");
+    return axios
       .request({
         url: process.env.REACT_APP_BASE_URL_REALM_AUTH_REFRESH,
         method: "POST",
@@ -110,26 +137,48 @@ class RealmAPI {
         },
       })
       .then(({ data }) => {
-        tokens = {...tokens, ...data};  // over-write the old access_token
+        tokens = { ...tokens, ...data }; // replace the old access_token
         sessionStorage.setJSONItem(SESSION_REALM_TOKENS_KEY, tokens);
-        this.httpRealm = createHttpRealm(tokens, dispatch);
+        return tokens;
       });
   }
 
-  authRealmSDK() {
-    // if user has a credential and Google authentication provider is enabled:
-    // return realmApp.logIn(Realm.Credentials.google(user.google.credential));
+  getRealmUser(user) {
+    if (user) {
+      const { provider, email, password } = user;
+      switch (provider) {
+        case "google": // for example
+          console.assert("google auth not implemented");
+          break;
 
-    // skip, it's not used!
-    return; // eslint-disable-next-line
+        default:
+          if (email && password) {
+            console.info("logging into realm app with email/password");
+            return realmApp.logIn(
+              Realm.Credentials.emailPassword(email, password)
+            );
+          }
+      }
+    }
+
     console.info("logging into realm app anonymously");
-    realmApp.logIn(Realm.Credentials.anonymous()).then((user) => {
-      this.realmUser = user;
-    });
+    return realmApp.logIn(Realm.Credentials.anonymous());
   }
 
-  async getCuisines() {
-    console.assert("deprecated")
+  // give a means for automatic & pro-active refresh of access token, therefore access token
+  //  used by Apollo GraphQL Client is a _dynamic_ api property (rather than Realm context state)
+  get realmAccessToken() {
+    // TODO: could we use realmApp.currentUser & also assure that SDK authentication had completed?
+    return this.realmUser.then((user) =>
+      // updates expired access_token
+      // TODO: should optimally call only when the access_token is close to expiration?
+      user.refreshCustomData().then(() => user.accessToken)
+    );
+  }
+
+  getCuisines() {
+    console.assert("deprecated, use GraphQL useCuisines custom hook");
+
     const source = axios.CancelToken.source(),
       q = this.httpRealm
         .then((http) => http.get("cuisines", { cancelToken: source.token }))
@@ -141,7 +190,7 @@ class RealmAPI {
     return q;
   }
 
-  async getRestaurants(page = {}, query = {}) {
+  getRestaurants(page = {}, query = {}) {
     // TODO: shouldn't we check if state is already up-to-date with parameters?
     // can state be inspected (read-only, of course!) from this.dispatch?
     // I could dispatch an action with a conditional callback, but then I wouldn't
@@ -167,8 +216,9 @@ class RealmAPI {
     return q;
   }
 
-  async getRestaurant(id) {
-    console.assert("deprecated")
+  getRestaurant(id) {
+    console.assert("deprecated, use GraphQL useRestaurant custom hook");
+
     return this.httpRealm
       .then((http) =>
         http.get("restaurants", {
@@ -180,13 +230,17 @@ class RealmAPI {
       );
   }
 
-  async createReview(data) {
+  createReview(data) {
+    console.assert("deprecated, use GraphQL useUpsertReview custom hook");
+
     this.dispatch(actions.ADD_REVIEW, data); // optimistic
     return this.httpRealm.then((http) => http.post("reviews", data));
     // TODO: catch failure, invalidate restaurant
   }
 
-  async updateReview(id, { userId, ...data }) {
+  updateReview(id, { userId, ...data }) {
+    console.assert("deprecated, use GraphQL useUpsertReview custom hook");
+
     this.dispatch(actions.EDIT_REVIEW, { id, userId, ...data }); // optimistic
     return this.httpRealm.then((http) =>
       http.put("reviews", data, {
@@ -196,15 +250,15 @@ class RealmAPI {
     // TODO: catch failure, invalidate restaurant
   }
 
-  async deleteReview(id, userId, restaurantId) {
+  deleteReview(id, userId, restaurantId) {
+    console.assert("deprecated, use GraphQL useDeleteReview custom hook");
+
     this.dispatch(actions.DELETE_REVIEW, { id, restaurantId }); // optimistic
     return this.httpRealm.then((http) =>
       http.delete("reviews", { params: new URLSearchParams({ id, userId }) })
     );
     // TODO: catch failure, invalidate restaurant
   }
-
-  // TODO: add more actions!
 }
 
 export default RealmAPI;

@@ -1,28 +1,20 @@
-import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client";
+import { GET_CUISINES, GET_RESTAURANT } from "./gql/query";
 
-export const CUISINES_QUERY = gql`
-  query {
-    cuisines
-  }
-`;
+export function useCuisines() {
+  const { loading, error = {}, data: { cuisines = [] } = {} } = useQuery(
+    GET_CUISINES
+  );
 
-export const RESTAURANT_QUERY = gql`
-  query restaurant($id: ObjectId) {
-  restaurant(query: {_id: $id}) {
-    _id
-    name
-    cuisine
-    address {
-      building
-      street
-      zipcode
-    }
-  }
-  reviews(query: {restaurant_id: {_id: $id}}) {
-    text
-    date
-    name
-    user_id
-  }
+  return [cuisines, loading, error];
 }
-`;
+
+export function useRestaurant(id) {
+  const {
+    loading,
+    error,
+    data: { restaurant = {}, reviews = [] } = {},
+  } = useQuery(GET_RESTAURANT, { variables: { id } });
+
+  return [{ ...restaurant, reviews }, loading, error];
+}

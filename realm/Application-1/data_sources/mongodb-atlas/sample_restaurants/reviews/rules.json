@@ -3,17 +3,7 @@
     "database": "sample_restaurants",
     "roles": [
         {
-            "name": "everyone",
-            "apply_when": {},
-            "read": true,
-            "write": false,
-            "insert": false,
-            "delete": false,
-            "search": true,
-            "additional_fields": {}
-        },
-        {
-            "name": "owner",
+            "name": "author",
             "apply_when": {
                 "user_id": "%%user.id"
             },
@@ -25,12 +15,16 @@
             "additional_fields": {}
         },
         {
-            "name": "editor",
+            "name": "everyone",
             "apply_when": {},
             "read": true,
             "write": false,
             "insert": false,
-            "delete": true,
+            "delete": {
+                "%%user.custom_fields.roles": {
+                    "$contains": "editor"
+                }
+            },
             "search": true,
             "additional_fields": {}
         }
