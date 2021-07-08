@@ -3,30 +3,22 @@ import React, { useContext, useEffect, useReducer, useState } from "react";
 import { useCurrentUser } from "services/user";
 
 import realmReducer from "./reducer";
-import RealmAPI, { SESSION_REALM_TOKENS_KEY } from "./api";
+import RealmAPI from "./api";
 
 const RealmContext = React.createContext([{}, () => {}]);
 
 export default function RealmContextProvider(props) {
   // create a reducer to manage internal state, get a dispatch method
   // create an API gateway instance that does work and dispatches actions to the reducer
-  const [state, dispatch] = useReducer(realmReducer, {
-      userTokens: sessionStorage.getJSONItem(SESSION_REALM_TOKENS_KEY, {}),
-      restaurantsById: {},
-    }),
-    [api] = useState(
-      // api object is never changed
-      new RealmAPI((type, payload) => dispatch({ type, payload }))
-    );
+  const [currentUser, , [authError, onAuthError]] = useCurrentUser(),
+      [state, dispatch] = useReducer(realmReducer, {}),
+    [api] = useState(new RealmAPI((type, payload) => dispatch({ type, payload })));
 
-  // observe user-state changes, re-authorize with Realm
-  const [currentUser, , onAuthError] = useCurrentUser();
   useEffect(() => {
-    if (!currentUser?.authError) {
-      console.info("Realm context authorizing user", currentUser);
-      api.auth(currentUser, onAuthError);
+    if (!authError) {
+      api.auth(currentUser).catch(onAuthError);
     }
-  }, [api, currentUser, onAuthError]);
+  }, [api, currentUser, authError, onAuthError]);
 
   return <RealmContext.Provider value={[state, api]} {...props} />;
 }

@@ -3,14 +3,6 @@ const defaults = {
 };
 
 exports = async function (payload, response) {
-  if ("id" in payload.query) {
-    // adopt the strategy that each logical collection (in the RESTful web-resource sense) has a single webhook
-    // (unfortunately subcollections are not acheivable on Realm; related collections are grouped in a Service)
-
-    // return a single item from the restaurants collection (in the MongoDB sense)
-    return getOne(payload, response);
-  }
-
   const pipeline = (query, skip, limit) => [
     {
       $match: query,
@@ -75,81 +67,8 @@ exports = async function (payload, response) {
   response.setBody(JSON.stringify(result));
 };
 
-async function getOne(payload, response) {
-  const pipeline = (id) => [
-    {
-      $match: {
-        _id: BSON.ObjectId(id),
-      },
-    },
-    {
-      $lookup: {
-        from: "reviews",
-        let: {
-          id: "$_id",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ["$restaurant_id", "$$id"],
-              },
-            },
-          },
-          {
-            $sort: {
-              date: -1,
-            },
-          },
-        ],
-        as: "reviews",
-      },
-    },
-    {
-      $addFields: {
-        reviews: "$reviews",
-      },
-    },
-  ];
-
-  //TODO: handle uncaught exceptions, error cases 400: invalid id, 404: NOT FOUND
-  const restaurants = context.services
-      .get("mongodb-atlas")
-      .db("sample_restaurants")
-      .collection("restaurants"),
-    restaurant = await restaurants.aggregate(pipeline(payload.query.id)).next(),
-    result = outputTransformRestaurantWithReviews(restaurant);
-
-  response.setStatusCode(200);
-  response.setBody(JSON.stringify(result));
-}
-
 const outputTransformRestaurant = ({ _id, ...rest }) => ({
   id: _id.toString(),
-  ...rest,
-});
-
-const outputTransformRestaurantWithReviews = ({
-  _id,
-  reviews = [],
-  ...rest
-}) => ({
-  id: _id.toString(),
-  ...rest,
-  reviews: reviews.map(outputTransformReview),
-});
-
-const outputTransformReview = ({
-  _id,
-  restaurant_id,
-  user_id,
-  date,
-  ...rest
-}) => ({
-  id: _id.toString(),
-  restaurantId: restaurant_id.toString(),
-  userId: user_id,
-  date: new Date(date),
   ...rest,
 });
 

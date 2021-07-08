@@ -9,6 +9,49 @@
         "type": "api-key",
         "disabled": true
     },
+    "custom-token": {
+        "name": "custom-token",
+        "type": "custom-token",
+        "config": {
+            "audience": [
+                "6fcf7d60-b95c-0136-50ab-0aa6611e1578136639"
+            ],
+            "jwkURI": "https://c0nversion-dev.onelogin.com/oidc/2/certs",
+            "signingAlgorithm": "",
+            "useJWKURI": true
+        },
+        "secret_config": {
+            "signingKeys": []
+        },
+        "disabled": false,
+        "metadata_fields": [
+            {
+                "required": false,
+                "name": "given_name",
+                "field_name": "name"
+            },
+            {
+                "required": false,
+                "name": "email",
+                "field_name": "email"
+            },
+            {
+                "required": false,
+                "name": "preferred_username",
+                "field_name": "username"
+            },
+            {
+                "required": false,
+                "name": "family_name",
+                "field_name": "surname"
+            },
+            {
+                "required": false,
+                "name": "name",
+                "field_name": "fullname"
+            }
+        ]
+    },
     "local-userpass": {
         "name": "local-userpass",
         "type": "local-userpass",

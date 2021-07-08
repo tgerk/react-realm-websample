@@ -1,40 +1,13 @@
-// this module defines both the shape of the state variable and the permissible transitions
-// https://orgler.medium.com/dont-use-redux-9e23b5381291 has an interesting near-rant on the
-//  dumb over-complication of react-redux done "right"
-// I suggest, as complexity increases, separating concerns among several contexts+reducers.
-//  Alternatively, compose a reducer from smaller sub-sections of the context-state object
+// This reducer's concerns are migrating to ApolloClient in GraphQL context
 export const actions = {
   CURRENT_USER: "set current user",
-  CHANGE_TOKENS: "set user tokens",
   GET_RESTAURANTS: "get restaurants",
-  GET_RESTAURANT: "get restaurant",
-  GET_CUISINES: "get cuisines",
-  ADD_REVIEW: "add review",
-  EDIT_REVIEW: "edit review",
-  DELETE_REVIEW: "delete review",
   IN_FLIGHT_BEGIN: "query in-progress",
   IN_FLIGHT_COMPLETE: "query resolved",
 };
 
 export default function realmReducer(state, { type, payload = {} }) {
   switch (type) {
-    case actions.CHANGE_TOKENS:
-      // Realm-issued tokens belong to RealmContext
-      // (even though based on identity parameters in the useCurrentUser)
-      // When useCurrentUser changes, RealmContext effect will call API
-      //  to acquire/refresh tokens; stored here for consumers
-      const { userTokens = {} } = state;
-      for (const k in payload) {
-        if (!(k in userTokens) || payload[k] !== userTokens[k]) {
-          console.log("updating user tokens", {
-            old: userTokens,
-            merge: payload,
-          });
-          return { ...state, userTokens: { ...userTokens, ...payload } };
-        }
-      }
-      break;
-
     case actions.CURRENT_USER: {
       const { user, ...rest } = state;
       if (payload) {
@@ -54,38 +27,8 @@ export default function realmReducer(state, { type, payload = {} }) {
       return rest;
     }
 
-    case actions.GET_CUISINES:
-      return { ...state, cuisines: payload };
-
     case actions.GET_RESTAURANTS:
       return { ...state, restaurants: payload };
-
-    case actions.GET_RESTAURANT:
-      return {
-        ...state,
-        restaurantsById: { ...state.restaurantsById, [payload.id]: payload },
-      };
-
-    case actions.ADD_REVIEW:
-    case actions.EDIT_REVIEW:
-    case actions.DELETE_REVIEW: {
-      const {
-        restaurantsById: {
-          [payload.restaurantId]: { reviews = [], ...restaurant } = {},
-        },
-      } = state;
-      if (payload.restaurantId !== restaurant.id) break;
-      return {
-        ...state,
-        restaurantsById: {
-          ...state.restaurantsById,
-          [payload.restaurantId]: {
-            ...restaurant,
-            reviews: reviewsReducer(reviews, { type, payload }),
-          },
-        },
-      };
-    }
 
     default:
       break;
@@ -102,21 +45,6 @@ function inFlightReducer(state = 0, { type }) {
       return state + 1;
     case actions.IN_FLIGHT_COMPLETE:
       return Math.max(state - 1, 0);
-  }
-
-  return state;
-}
-
-function reviewsReducer(state = [], { type, payload }) {
-  switch (type) {
-    default:
-      break;
-    case actions.ADD_REVIEW:
-      return [payload, ...state];
-    case actions.EDIT_REVIEW:
-      return [payload, ...state.filter(({ id }) => id !== payload.id)];
-    case actions.DELETE_REVIEW:
-      return state.filter(({ id }) => id !== payload.id);
   }
 
   return state;

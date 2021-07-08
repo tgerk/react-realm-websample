@@ -2,9 +2,11 @@ import { useQuery } from "@apollo/client";
 import { GET_CUISINES, GET_RESTAURANT } from "./gql/query";
 
 export function useCuisines() {
-  const { loading, error = {}, data: { cuisines = [] } = {} } = useQuery(
-    GET_CUISINES
-  );
+  const {
+    loading,
+    error = {},
+    data: { cuisines = [] } = {},
+  } = useQuery(GET_CUISINES);
 
   return [cuisines, loading, error];
 }

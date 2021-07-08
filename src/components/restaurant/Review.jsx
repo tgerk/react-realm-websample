@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 
 import { useRealm } from "services/realm";
-import { useAddEditReview } from "services/graphql/mutations";
+import { useAddEditReview } from "services/graphql/reviews";
 
 export default function Review({ restaurantId, review = {}, history }) {
   const { _id: reviewId, text: initialText } = review,
     [reviewText, setReviewText] = useState(initialText),
-    [{ user = {} }] = useRealm(),
+    [{ user }] = useRealm(),
     [addEditReview] = useAddEditReview(user, restaurantId, reviewId);
 
   function saveReview(event) {

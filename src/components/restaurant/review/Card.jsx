@@ -5,7 +5,7 @@ import relativeDate from "relative-date";
 import Card from "Card";
 
 import { useRealm } from "services/realm";
-import { useDeleteReview } from "services/graphql/mutations";
+import { useDeleteReview } from "services/graphql/reviews";
 
 export default function ReviewCard({ restaurantId, review }) {
   const { _id: reviewId, user_id: userId, name: userName, date, text } = review,

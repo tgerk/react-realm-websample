@@ -9,22 +9,17 @@ import {
 import { useRealm } from "services/realm";
 
 export default function GraphContextProvider(props) {
-  const [, /* { user } */ api] = useRealm(),
-    // access token is a dynamic property of api object
-    // the Realm-web SDK performs authentication, this object is (for this revision)
-    //  embedded in the Realm api object.  The Realm API object has been a convenient
-    //  abstraction for the extended migration among all the possible access methods:
-    //  mongo db interface via a custom REST api layer, Realm webhooks, now Realm graphql
+  // access token is a dynamic property of Realm api object, which encapsulates Realm SDK
+  const [, api] = useRealm(),
     [client] = useState(
       new ApolloClient({
         cache: new InMemoryCache(),
         link: createHttpLink({
           uri: process.env.REACT_APP_GRAPHQL_REALM,
 
-          // fetch handler that assembles authorization header
+          // fetch handler that awaits authentication of a Realm user to get its access token
           fetch: async (uri, options) => {
-            const accessToken = await api.realmAccessToken;
-            options.headers.Authorization = `Bearer ${accessToken}`;
+            options.headers.Authorization = `Bearer ${await api.realmAccessToken}`;
             return fetch(uri, options);
           },
         }),
@@ -33,3 +28,5 @@ export default function GraphContextProvider(props) {
 
   return <ApolloProvider client={client} {...props} />;
 }
+
+// custom hooks for queries, mutations, and subscriptions are organized in per-entity modules

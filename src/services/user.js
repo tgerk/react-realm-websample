@@ -1,33 +1,31 @@
 import React, { useCallback, useContext, useState } from "react";
 
-const SESSION_CURRENT_USER_KEY = "currentUser";
-
-export const UserContext = React.createContext([null, () => {}]);
+const UserContext = React.createContext([null, () => {}]),
+  SESSION_CURRENT_USER_KEY = "currentUser";
 
 export default function UserContextProvider(props) {
   const [user, setUser] = useState(
       sessionStorage.getJSONItem(SESSION_CURRENT_USER_KEY, null)
     ),
+    [authError, setAuthError] = useState(),
     setCurrentUser = useCallback(
+      // cache authenticated user data in session storage
       (user) => {
-        if (user) {
+        if (user && Object.keys(user).length) {
           sessionStorage.setJSONItem(SESSION_CURRENT_USER_KEY, user);
         } else {
           sessionStorage.removeItem(SESSION_CURRENT_USER_KEY);
         }
 
+        setAuthError(); // clear prior errors
         setUser(user);
       },
       [setUser]
-    ),
-    onAuthError = useCallback(
-      (authError) => setCurrentUser({ ...user, authError }),
-      [user, setCurrentUser]
     );
 
   return (
     <UserContext.Provider
-      value={[user, setCurrentUser, onAuthError]}
+      value={[user, setCurrentUser, [authError, setAuthError]]}
       {...props}
     />
   );

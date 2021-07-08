@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Gallery from "Gallery";
 import ReviewCard from "restaurant/review/Card";
 
-import { useRestaurant } from "services/graphql/queries";
+import { useRestaurant } from "services/graphql/restaurants";
 
 export default function Restaurant({ id }) {
   const [
@@ -38,8 +38,8 @@ export default function Restaurant({ id }) {
         <h2> Reviews </h2>
         {reviews.length > 0 ? (
           <Gallery>
-            {reviews.map((review, i) => (
-              <ReviewCard restaurantId={id} review={review} key={i} />
+            {reviews.map((review) => (
+              <ReviewCard restaurantId={id} review={review} key={review._id} />
             ))}
           </Gallery>
         ) : (

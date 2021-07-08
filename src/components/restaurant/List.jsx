@@ -14,8 +14,8 @@ export default function RestaurantList() {
     <div className="restaurants-list">
       {restaurants?.length ? (
         <Gallery {...{ total, ...links, ...data }}>
-          {restaurants.map((restaurant, i) => (
-            <RestaurantCard {...restaurant} key={i} />
+          {restaurants.map((restaurant) => (
+            <RestaurantCard {...restaurant} key={restaurant.id} />
           ))}
         </Gallery>
       ) : restaurants ? (

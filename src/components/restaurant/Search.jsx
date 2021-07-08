@@ -1,17 +1,20 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router";
+
+import crc32 from "crc-32";
 
 import Bubble from "Bubble";
 
 import { useRealm, useDebouncedEffect } from "services/realm";
-import { useCuisines } from "services/graphql/queries";
+import { useCuisines } from "services/graphql/restaurants";
 
 const ALL_CUISINES = "All Cuisines";
 
-export default function SearchRestaurants({ locationQuery }) {
-  // note: search parameters in props are used as initial condition; updates to this form do not directly
-  //  update the location (where the props come from):  user must do page navigation to change props
+export default function SearchRestaurants() {
   const [cuisines] = useCuisines(),
     [{ restaurants: { query: lastQuery = {} } = {} }, api] = useRealm(),
+    { search } = useLocation(), // can be updated by Gallery pagination links
+    locationQuery = Object.fromEntries(new URLSearchParams(search).entries()),
     { page, skip, size, limit, ...currentQuery } = {
       ...locationQuery,
       ...lastQuery,
@@ -44,15 +47,10 @@ export default function SearchRestaurants({ locationQuery }) {
   };
 
   // debouncing provides automatic and periodic updates as search changes
-  useDebouncedEffect(
-    () => {
-      const q = api.getRestaurants(currentPage, query);
-
-      return q.cancel;
-    },
-    700,
-    [locationQuery, query, api]
-  );
+  useDebouncedEffect(() => api.getRestaurants(currentPage, query), 700, [
+    query,
+    api,
+  ]);
 
   function SearchForm({ refFocus }) {
     return (
@@ -74,11 +72,12 @@ export default function SearchRestaurants({ locationQuery }) {
         />
         <select name="cuisine" onChange={updateQuery}>
           <option value={ALL_CUISINES}> {ALL_CUISINES} </option>
-          {cuisines.map((cuisine, i) => (
-            <option value={cuisine} key={i}>
-              {" "}
-              {cuisine}{" "}
-            </option>
+          {cuisines.map((cuisine) => (
+            <option
+              value={cuisine}
+              key={crc32.str(cuisine)}
+              children={cuisine}
+            />
           ))}
         </select>
       </div>

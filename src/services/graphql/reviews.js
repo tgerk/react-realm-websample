@@ -2,6 +2,8 @@ import { useMutation } from "@apollo/client";
 import { ADD_REVIEW, MODIFY_REVIEW, REMOVE_REVIEW } from "./gql/mutation";
 import { GET_RESTAURANT } from "./gql/query";
 
+// each manufactured mutation function returns a promise
+
 export function useAddEditReview(user, restaurantId, reviewId) {
   const [addReview, addResult] = useMutation(ADD_REVIEW, {
       update: addReviewToRestaurantQuery,
@@ -20,7 +22,8 @@ export function useAddEditReview(user, restaurantId, reviewId) {
     const variables = {
       restaurantId,
       userId: user.id,
-      userName: user.profile?.name || user.profile?.email,
+      userName:
+        user.profile?.fullname || user.profile?.name || user.profile?.email,
       date: new Date(),
     };
     return reviewId
