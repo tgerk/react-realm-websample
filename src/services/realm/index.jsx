@@ -11,8 +11,10 @@ export default function RealmContextProvider(props) {
   // create a reducer to manage internal state, get a dispatch method
   // create an API gateway instance that does work and dispatches actions to the reducer
   const [currentUser, , [authError, onAuthError]] = useCurrentUser(),
-      [state, dispatch] = useReducer(realmReducer, {}),
-    [api] = useState(new RealmAPI((type, payload) => dispatch({ type, payload })));
+    [state, dispatch] = useReducer(realmReducer, {}),
+    [api] = useState(
+      new RealmAPI((type, payload) => dispatch({ type, payload }))
+    );
 
   useEffect(() => {
     if (!authError) {

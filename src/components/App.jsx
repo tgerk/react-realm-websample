@@ -23,9 +23,9 @@ export default function App() {
                 <Route
                   render={({ location: { pathname } }) =>
                     pathname.match(/^\/(|restaurants)$/i) ? (
-                      <Link to={"/restaurants"}> Restaurants </Link>
-                    ) : (
                       <Search />
+                    ) : (
+                      <Link to={"/restaurants"}> Restaurants </Link>
                     )
                   }
                 />

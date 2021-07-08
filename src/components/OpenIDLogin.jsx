@@ -24,12 +24,9 @@ export default function OidcLoginProviders({ children }) {
 
         case "onelogin":
           oneloginAuth(search)
-            .then(
-              (data) => {
-                setCurrentUser({ [provider]: data });
-              },
-              onAuthError
-            )
+            .then((data) => {
+              setCurrentUser({ [provider]: data });
+            }, onAuthError)
             .finally(() => {
               history.replace("/");
             });

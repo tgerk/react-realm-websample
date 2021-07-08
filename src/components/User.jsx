@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import Bubble from "Bubble";
 import Error from "Error";
@@ -29,12 +29,18 @@ export default function User() {
   }
 
   function Login({ refFocus }) {
-    const [user, setUser] = useState(currentUser),
+    const [user, setUser] = useState(currentUser || {}),
       { email = "", password = "" } = user,
       [emailLogin, showEmailLogin] = useState(false),
       updateUser = ({ target: { name, value } }) => {
         setUser({ ...user, [name]: value });
       };
+
+    useEffect(() => {
+      if (emailLogin) {
+        refFocus.current?.focus();
+      }
+    }, [emailLogin, refFocus]);
 
     function handleLogin(event) {
       event.preventDefault();
@@ -44,7 +50,6 @@ export default function User() {
     if (emailLogin) {
       return (
         <form id="login" onSubmit={handleLogin}>
-
           <div>
             <label htmlFor="email">Email</label>
             <input
@@ -82,6 +87,7 @@ export default function User() {
     return (
       <OidcLoginProviders>
         <button
+          ref={refFocus}
           onClick={() => {
             showEmailLogin(true);
           }}
