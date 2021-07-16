@@ -10,7 +10,6 @@
 
 # production
 /build
-/realm/*/hosting/files
 
 # misc
 .DS_Store
