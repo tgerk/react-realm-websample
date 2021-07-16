@@ -21,3 +21,15 @@ export const GET_RESTAURANT = gql`
     }
   }
 `;
+
+// the auto-generated graphql schema does not:
+//  provide an offset or cursor parameter (only limit)
+//  support {$text: { $search: "stuff"}} text searches
+// therefore, I'm going to leave this here (unused) and move RTF on
+export const GET_RESTAURANTS = gql`
+  ${RESTAURANT_FIELDS}
+  query getRestaurants($limit: Int, $cuisines: [String], $zipcodes: [String]) {
+  restaurants(limit: $limit, query: { address: { zipcode_in: $zipcodes}, cuisine_in: $cuisines}, sortBy: RESTAURANT_ID_DESC) {
+    ...RestaurantData
+  }
+}`;
